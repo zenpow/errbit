@@ -41,9 +41,15 @@ class User
   validates :name, presence: true
   validates :github_login, uniqueness: { allow_nil: true }
 
+  has_many :apps, :foreign_key => 'watchers.user_id'
+
   if Errbit::Config.user_has_username
     field :username
     validates :username, presence: true
+  end
+
+  def watchers
+    apps.map(&:watchers).flatten.select {|w| w.user_id.to_s == id.to_s}
   end
 
   def per_page

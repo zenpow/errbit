@@ -5,16 +5,23 @@ class WatchersController < ApplicationController
     App.find(params[:app_id])
   end
 
-  def destroy
-    watcher = app.watchers.where(user_id: params[:id]).first
-    app.watchers.delete(watcher)
-    flash[:success] = t('.success', app: app.name)
-    redirect_to app_path(app)
+  expose(:watcher) do
+    app.watchers.where(:user_id => params[:id]).first
   end
 
-  def update
-    app.watchers.create(user_id: current_user.id)
-    flash[:success] = t('.success', app: app.name)
-    redirect_to app_path(app)
+  before_action :require_watcher_edit_priviledges, :only => [:destroy]
+
+  def destroy
+    app.watchers.delete(watcher)
+    flash[:success] = "That's sad. #{watcher.label} is no longer watcher."
+    redirect_to root_path
   end
+
+  private
+
+  def require_watcher_edit_priviledges
+    redirect_to(root_path) unless current_user == watcher.user || current_user.admin?
+  end
+
 end
+
