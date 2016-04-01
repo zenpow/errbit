@@ -11,9 +11,10 @@ class ProblemsController < ApplicationController
     :resolve_several, :unresolve_several, :unmerge_several
   ]
 
-  expose(:app_scope) do
-    params[:app_id] ? App.where(_id: params[:app_id]) : App.all
-  end
+  expose(:app_scope) {
+    apps = current_user.admin? ? App.all : current_user.apps
+    params[:app_id] ? apps.where(:_id => params[:app_id]) : apps
+  }
 
   expose(:app) do
     AppDecorator.new app_scope.find(params[:app_id])
@@ -31,12 +32,21 @@ class ProblemsController < ApplicationController
     params[:environment]
   end
 
+<<<<<<< HEAD
   expose(:problems) do
     pro = Problem.
       for_apps(app_scope).
       in_env(params_environement).
       all_else_unresolved(all_errs).
       ordered_by(params_sort, params_order)
+=======
+  expose(:problems) {
+    pro = Problem.for_apps(
+      app_scope
+    ).in_env(
+      params_environement
+    ).all_else_unresolved(all_errs).ordered_by(params_sort, params_order)
+>>>>>>> parent of 74429ae... Refs #561 users can see all apps
 
     if request.format == :html
       pro.page(params[:page]).per(current_user.per_page)

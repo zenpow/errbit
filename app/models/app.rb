@@ -21,6 +21,7 @@ class App
     pre_processed: true,
     default:       -> { BSON::ObjectId.new.to_s }
 
+
   embeds_many :watchers
   embeds_one :issue_tracker, class_name: 'IssueTracker'
   embeds_one :notification_service
@@ -39,6 +40,7 @@ class App
   validates_associated :notice_fingerprinter
   validate :check_issue_tracker
 
+<<<<<<< HEAD
   accepts_nested_attributes_for :watchers,
     allow_destroy: true,
     reject_if:     proc { |attrs| attrs[:user_id].blank? && attrs[:email].blank? }
@@ -65,6 +67,12 @@ class App
   def watched_by?(user)
     watchers.pluck("user_id").include? user.id
   end
+  accepts_nested_attributes_for :watchers, :allow_destroy => true,
+    :reject_if => proc { |attrs| attrs[:user_id].blank? && attrs[:email].blank? }
+  accepts_nested_attributes_for :issue_tracker, :allow_destroy => true,
+    :reject_if => proc { |attrs| !ErrbitPlugin::Registry.issue_trackers.keys.map(&:to_s).include?(attrs[:type_tracker].to_s) }
+  accepts_nested_attributes_for :notification_service, :allow_destroy => true,
+    :reject_if => proc { |attrs| !NotificationService.subclasses.map(&:to_s).include?(attrs[:type].to_s) }
 
   # Acceps a hash with the following attributes:
   #

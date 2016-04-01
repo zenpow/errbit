@@ -39,11 +39,12 @@ describe AppsController, type: 'controller' do
     end
 
     context 'when logged in as a regular user' do
-      it 'finds all apps' do
-        sign_in user
-        unwatched_app && watched_app1 && watched_app2
+      it 'finds apps the user is watching' do
+        sign_in(user)
+        watched_app1 && watched_app2 && unwatched_app
         get :index
-        expect(controller.apps.entries).to eq App.all.to_a.sort.entries
+        expect(controller.apps).to include(watched_app1, watched_app2)
+        expect(controller.apps).to_not include(unwatched_app)
       end
     end
   end
@@ -162,12 +163,19 @@ describe AppsController, type: 'controller' do
     end
 
     context 'logged in as a user' do
-      it 'finds the app even when not watching it' do
+      it 'finds the app if the user is watching it' do
+        watcher
+        sign_in user
+        get :show, :id => app.id
+        expect(controller.app).to eq app
+      end
+
+      it 'does not find the app if the user is not watching it' do
         sign_in Fabricate(:user)
         app = Fabricate(:app)
-
-        get :show, id: app.id
-        expect(controller.app).to eq app
+        expect{
+          get :show, :id => app.id
+        }.to raise_error(Mongoid::Errors::DocumentNotFound)
       end
     end
   end
